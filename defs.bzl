@@ -58,6 +58,9 @@ def _build_sonar_project_properties(ctx, sq_properties_file):
     if hasattr(ctx.attr, "coverage_report") and ctx.attr.coverage_report:
         coverage_report_path = parent_path + ctx.file.coverage_report.short_path
         coverage_runfiles = [ctx.file.coverage_report]
+    elif hasattr(ctx.attr, "coverage_report_path") and ctx.attr.coverage_report_path:
+        coverage_report_path = parent_path + ctx.attr.coverage_report_path
+        coverage_runfiles = []
     else:
         coverage_report_path = ""
         coverage_runfiles = []
@@ -138,6 +141,7 @@ _COMMON_ATTRS = dict(dict(), **{
 _sonarqube = rule(
     attrs = dict(_COMMON_ATTRS, **{
         "coverage_report": attr.label(allow_single_file = True, mandatory = False),
+        "coverage_report_path": attr.string(),
         "scm_info": attr.label_list(allow_files = True),
         "sonar_scanner": attr.label(executable = True, default = "@bazel_sonarqube//:sonar_scanner", cfg = "host"),
     }),
@@ -152,6 +156,7 @@ def sonarqube(
         project_key,
         scm_info,
         coverage_report = None,
+        coverage_report_path = None,
         project_name = None,
         srcs = [],
         source_encoding = None,
@@ -225,6 +230,7 @@ def sonarqube(
         test_targets = test_targets,
         test_reports = test_reports,
         coverage_report = coverage_report,
+        coverage_report_path = coverage_report_path,
         sonar_scanner = sonar_scanner,
         sq_properties_template = sq_properties_template,
         sq_properties = "sonar-project.properties",
