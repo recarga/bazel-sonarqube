@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -354,7 +355,7 @@ public class SonarQubeCoverageGenerator {
     @VisibleForTesting
     static List<File> getCoverageFilesInDir(String dir) {
         List<File> files = new ArrayList<>();
-        try (Stream<Path> stream = Files.walk(Paths.get(dir))) {
+        try (Stream<Path> stream = Files.walk(Paths.get(dir), FileVisitOption.FOLLOW_LINKS)) {
             files =
                     stream
                             .filter(
@@ -363,7 +364,16 @@ public class SonarQubeCoverageGenerator {
                                                     || p.toString().endsWith(GCOV_EXTENSION)
                                                     || p.toString().endsWith(GCOV_JSON_EXTENSION)
                                                     || p.toString().endsWith(PROFDATA_EXTENSION))
-                            .map(path -> path.toFile())
+                            .map(path -> {
+                                while (Files.isSymbolicLink(path)) {
+                                    try {
+                                        path = Files.readSymbolicLink(path);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                                return path.toFile();
+                            })
                             .collect(Collectors.toList());
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Error reading folder " + dir + ": " + ex.getMessage());
