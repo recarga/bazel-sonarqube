@@ -113,7 +113,7 @@ def _sonarqube_impl(ctx):
         content = "\n".join([
             "#!/bin/bash",
             "echo 'Dereferencing bazel runfiles symlinks for accurate SCM resolution...'",
-            "export TMP_DIR=`mktemp -d -t sonar`",
+            "export TMP_DIR=`mktemp -d`",
             "rsync -a $(dirname %s) ${TMP_DIR}/",
             "rsync -aL ${TMP_DIR}/ $(dirname %s)",
             "rm -rf ${TMP_DIR} &",
